@@ -1,0 +1,15 @@
+[project]
+name = "2pl-dqn"
+version = "0.1.0"
+description = "DQN-based computerized adaptive testing experiments"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "pandas",
+    "torch",
+    "matplotlib",
+]
+
+[tool.uv]
+package = false
