@@ -1,0 +1,36 @@
+MFI & 0.623 & 0.429 & 0.301 & \textbf{0.220} & 199\\
+\hline
+既存 & 0.748 & 0.498 & 0.353 & 0.263 & 70\\
+既存＋非負制約 & 0.621 & 0.427 & 0.304 & 0.221 & 176\\
+既存＋状態表現 & 0.754 & 0.499 & 0.349 & 0.261 & 69\\
+既存＋報酬 & 0.763 & 0.496 & 0.358 & 0.272 & 64\\
+既存＋割引率 & 0.693 & 0.474 & 0.343 & 0.261 & 75\\
+既存＋学習設定群 & 0.737 & 0.476 & 0.338 & 0.258 & 72\\
+\hline
+提案 & 0.600 & 0.419 & \textbf{0.300} & 0.222 & 167\\
+提案−非負制約 & 0.701 & 0.451 & 0.322 & 0.246 & 79\\
+提案−状態表現 & 0.608 & 0.422 & \textbf{0.300} & 0.221 & 182\\
+提案−報酬 & 0.631 & 0.428 & 0.303 & \textbf{0.220} & 184\\
+提案−割引率 & \textbf{0.599} & \textbf{0.416} & 0.302 & 0.224 & 171\\
+提案−学習設定群 & 0.675 & 0.451 & 0.322 & 0.241 & 187\\
+%% grad_steps: {'existing': 39873.0, 'existing+constraint': 39873.0, 'existing+gamma': 39873.0, 'existing+learning': 24997.0, 'existing+reward': 39873.0, 'existing+state': 39873.0, 'proposed': 24997.0, 'proposed-constraint': 24997.0, 'proposed-gamma': 24997.0, 'proposed-learning': 39873.0, 'proposed-reward': 24997.0, 'proposed-state': 24997.0}
+  existing+constraint    - existing step  5: mean -0.1266  range [-0.1747, -0.0890]  all<0: True  all>0: False
+  existing+constraint    - existing step 40: mean -0.0415  range [-0.0508, -0.0343]  all<0: True  all>0: False
+  existing+state         - existing step  5: mean +0.0063  range [-0.0237, +0.0446]  all<0: False  all>0: False
+  existing+state         - existing step 40: mean -0.0017  range [-0.0114, +0.0064]  all<0: False  all>0: False
+  existing+reward        - existing step  5: mean +0.0151  range [-0.0283, +0.0653]  all<0: False  all>0: False
+  existing+reward        - existing step 40: mean +0.0090  range [+0.0040, +0.0134]  all<0: False  all>0: True
+  existing+gamma         - existing step  5: mean -0.0552  range [-0.1109, +0.0028]  all<0: False  all>0: False
+  existing+gamma         - existing step 40: mean -0.0016  range [-0.0060, +0.0011]  all<0: False  all>0: False
+  existing+learning      - existing step  5: mean -0.0104  range [-0.0736, +0.0437]  all<0: False  all>0: False
+  existing+learning      - existing step 40: mean -0.0047  range [-0.0074, -0.0027]  all<0: True  all>0: False
+  proposed-constraint    - proposed step  5: mean +0.1005  range [+0.0912, +0.1156]  all<0: False  all>0: True
+  proposed-constraint    - proposed step 40: mean +0.0240  range [+0.0174, +0.0281]  all<0: False  all>0: True
+  proposed-state         - proposed step  5: mean +0.0081  range [+0.0016, +0.0180]  all<0: False  all>0: True
+  proposed-state         - proposed step 40: mean -0.0007  range [-0.0040, +0.0054]  all<0: False  all>0: False
+  proposed-reward        - proposed step  5: mean +0.0306  range [+0.0203, +0.0441]  all<0: False  all>0: True
+  proposed-reward        - proposed step 40: mean -0.0020  range [-0.0039, +0.0004]  all<0: False  all>0: False
+  proposed-gamma         - proposed step  5: mean -0.0013  range [-0.0102, +0.0051]  all<0: False  all>0: False
+  proposed-gamma         - proposed step 40: mean +0.0024  range [+0.0004, +0.0043]  all<0: False  all>0: True
+  proposed-learning      - proposed step  5: mean +0.0752  range [+0.0299, +0.1474]  all<0: False  all>0: True
+  proposed-learning      - proposed step 40: mean +0.0193  range [+0.0174, +0.0204]  all<0: False  all>0: True

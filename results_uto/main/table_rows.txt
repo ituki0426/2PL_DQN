@@ -1,0 +1,49 @@
+MFI & \textbf{1.257} & \textbf{0.765} & 0.613 & 0.428 & \textbf{0.300} & \textbf{0.249} & \textbf{0.218} & 202\\
+FIWL & 1.396 & 0.796 & 0.629 & 0.435 & 0.301 & 0.251 & 0.220 & 198\\
+MPWI & 1.285 & 0.771 & \textbf{0.596} & 0.423 & 0.301 & \textbf{0.249} & 0.220 & 189\\
+MEPV & 1.285 & 0.771 & \textbf{0.596} & 0.423 & 0.302 & \textbf{0.249} & 0.220 & 187\\
+既存 & 1.282 & 0.857 & 0.695 & 0.472 & 0.340 & 0.286 & 0.258 & 72\\
+提案 & 1.285 & 0.780 & \textbf{0.596} & \textbf{0.420} & 0.302 & 0.250 & 0.220 & 168\\
+%% reps: [4, 5, 6]  reference: [0.215, 0.2153, 0.215]
+%% rmse SD@40: {'MFI': 0.003, 'FIWL': 0.004, 'MPWI': 0.002, 'MEPV': 0.001, 'existing': 0.007, 'proposed': 0.001}
+%% max |mean diff| FIWL-MFI steps 10-40: (0.007176417297430293, 11)
+%% paired differences vs MFI
+  FIWL                   - MFI      step  1: mean +0.1383  range [+0.1220, +0.1519]  all<0: False  all>0: True
+  FIWL                   - MFI      step  3: mean +0.0308  range [+0.0184, +0.0467]  all<0: False  all>0: True
+  FIWL                   - MFI      step  5: mean +0.0165  range [+0.0100, +0.0227]  all<0: False  all>0: True
+  FIWL                   - MFI      step 10: mean +0.0072  range [-0.0057, +0.0144]  all<0: False  all>0: False
+  FIWL                   - MFI      step 20: mean +0.0007  range [-0.0046, +0.0069]  all<0: False  all>0: False
+  FIWL                   - MFI      step 40: mean +0.0013  range [-0.0032, +0.0081]  all<0: False  all>0: False
+  MPWI                   - MFI      step  1: mean +0.0274  range [+0.0249, +0.0304]  all<0: False  all>0: True
+  MPWI                   - MFI      step  3: mean +0.0061  range [+0.0041, +0.0072]  all<0: False  all>0: True
+  MPWI                   - MFI      step  5: mean -0.0165  range [-0.0244, -0.0084]  all<0: True  all>0: False
+  MPWI                   - MFI      step 10: mean -0.0051  range [-0.0268, +0.0095]  all<0: False  all>0: False
+  MPWI                   - MFI      step 20: mean +0.0010  range [-0.0018, +0.0024]  all<0: False  all>0: False
+  MPWI                   - MFI      step 40: mean +0.0018  range [+0.0007, +0.0036]  all<0: False  all>0: True
+  MEPV                   - MFI      step  1: mean +0.0274  range [+0.0249, +0.0304]  all<0: False  all>0: True
+  MEPV                   - MFI      step  3: mean +0.0061  range [+0.0041, +0.0072]  all<0: False  all>0: True
+  MEPV                   - MFI      step  5: mean -0.0165  range [-0.0238, -0.0087]  all<0: True  all>0: False
+  MEPV                   - MFI      step 10: mean -0.0043  range [-0.0256, +0.0113]  all<0: False  all>0: False
+  MEPV                   - MFI      step 20: mean +0.0015  range [-0.0019, +0.0035]  all<0: False  all>0: False
+  MEPV                   - MFI      step 40: mean +0.0016  range [-0.0007, +0.0042]  all<0: False  all>0: False
+  existing               - MFI      step  1: mean +0.0250  range [+0.0051, +0.0431]  all<0: False  all>0: True
+  existing               - MFI      step  3: mean +0.0914  range [+0.0446, +0.1219]  all<0: False  all>0: True
+  existing               - MFI      step  5: mean +0.0819  range [+0.0268, +0.1210]  all<0: False  all>0: True
+  existing               - MFI      step 10: mean +0.0444  range [+0.0130, +0.0664]  all<0: False  all>0: True
+  existing               - MFI      step 20: mean +0.0400  range [+0.0374, +0.0442]  all<0: False  all>0: True
+  existing               - MFI      step 40: mean +0.0393  range [+0.0350, +0.0428]  all<0: False  all>0: True
+  proposed               - MFI      step  1: mean +0.0274  range [+0.0249, +0.0304]  all<0: False  all>0: True
+  proposed               - MFI      step  3: mean +0.0147  range [+0.0084, +0.0230]  all<0: False  all>0: True
+  proposed               - MFI      step  5: mean -0.0171  range [-0.0210, -0.0151]  all<0: True  all>0: False
+  proposed               - MFI      step 10: mean -0.0078  range [-0.0246, +0.0007]  all<0: False  all>0: False
+  proposed               - MFI      step 20: mean +0.0015  range [-0.0027, +0.0046]  all<0: False  all>0: False
+  proposed               - MFI      step 40: mean +0.0014  range [-0.0015, +0.0033]  all<0: False  all>0: False
+%% paired differences vs MEPV
+  proposed               - MEPV     step  5: mean -0.0005  range [-0.0064, +0.0088]  all<0: False  all>0: False
+  proposed               - MEPV     step 10: mean -0.0035  range [-0.0107, +0.0010]  all<0: False  all>0: False
+  proposed               - MEPV     step 20: mean +0.0000  range [-0.0008, +0.0011]  all<0: False  all>0: False
+  proposed               - MEPV     step 40: mean -0.0002  range [-0.0009, +0.0011]  all<0: False  all>0: False
+  MPWI                   - MEPV     step  5: mean +0.0000  range [-0.0006, +0.0004]  all<0: False  all>0: False
+  MPWI                   - MEPV     step 10: mean -0.0008  range [-0.0018, +0.0005]  all<0: False  all>0: False
+  MPWI                   - MEPV     step 20: mean -0.0005  range [-0.0011, +0.0001]  all<0: False  all>0: False
+  MPWI                   - MEPV     step 40: mean +0.0002  range [-0.0006, +0.0018]  all<0: False  all>0: False

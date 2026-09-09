@@ -1,0 +1,33 @@
+rep 1: asymptotic reference value from true-theta information 0.216
+rep 1: MFI                    RMSE@40 0.218  items 203
+rep 1: FIWL                   RMSE@40 0.219  items 195
+rep 1: MPWI                   RMSE@40 0.220  items 183
+rep 1: MEPV                   RMSE@40 0.217  items 184
+rep 1: prec_gain_g0.0         RMSE@40 0.222  items 174  val return 21.230  updates 24997  69s
+rep 1: prec_gain_g0.5         RMSE@40 0.219  items 165  val return 21.214  updates 24997  62s
+rep 1: prec_gain_g0.9         RMSE@40 0.226  items 152  val return 20.432  updates 24997  59s
+rep 1: prec_gain_g1.0         RMSE@40 0.245  items 160  val return 18.239  updates 24997  57s
+rep 1: var_reduction_g0.0     RMSE@40 0.231  items 162  val return 3.006  updates 24997  57s
+rep 1: var_reduction_g0.5     RMSE@40 0.231  items 170  val return 3.021  updates 24997  57s
+rep 1: var_reduction_g0.9     RMSE@40 0.240  items 158  val return 2.926  updates 24997  57s
+rep 1: var_reduction_g1.0     RMSE@40 0.273  items 127  val return 2.777  updates 24997  57s
+rep 1: fi_ref_g0.0            RMSE@40 0.219  items 197  val return 21.621  updates 24961  57s
+rep 1: fi_ref_g0.5            RMSE@40 0.215  items 186  val return 21.619  updates 24961  57s
+rep 1: fi_ref_g0.9            RMSE@40 0.223  items 166  val return 20.659  updates 24961  57s
+rep 1: fi_ref_g1.0            RMSE@40 0.232  items 152  val return 19.471  updates 24961  57s
+rep 1: fi_hat_prev_g0.0       RMSE@40 0.215  items 208  val return 23.014  updates 24997  57s
+rep 1: fi_hat_prev_g0.5       RMSE@40 0.217  items 185  val return 23.063  updates 24997  57s
+rep 1: fi_hat_prev_g0.9       RMSE@40 0.221  items 179  val return 22.241  updates 24997  57s
+rep 1: fi_hat_prev_g1.0       RMSE@40 0.229  items 187  val return 20.286  updates 24997  57s
+rep 1: fi_hat_post_g0.0       RMSE@40 0.219  items 197  val return 21.985  updates 24997  57s
+rep 1: fi_hat_post_g0.5       RMSE@40 0.224  items 197  val return 21.958  updates 24997  57s
+rep 1: fi_hat_post_g0.9       RMSE@40 0.226  items 176  val return 21.307  updates 24997  57s
+rep 1: fi_hat_post_g1.0       RMSE@40 0.228  items 162  val return 19.805  updates 24997  57s
+rep 1: err_reduction_ref_g0.0 RMSE@40 0.341  items 72  val return 1.212  updates 24961  56s
+rep 1: err_reduction_ref_g0.5 RMSE@40 0.332  items 98  val return 1.216  updates 24961  56s
+rep 1: err_reduction_ref_g0.9 RMSE@40 0.358  items 82  val return 1.265  updates 24961  56s
+rep 1: err_reduction_ref_g1.0 RMSE@40 0.513  items 111  val return 1.411  updates 24961  56s
+rep 1: neg_sq_err_ref_g0.0    RMSE@40 0.342  items 80  val return -8.929  updates 24961  57s
+rep 1: neg_sq_err_ref_g0.5    RMSE@40 0.329  items 99  val return -9.300  updates 24961  56s
+rep 1: neg_sq_err_ref_g0.9    RMSE@40 0.293  items 175  val return -8.006  updates 24961  56s
+rep 1: neg_sq_err_ref_g1.0    RMSE@40 0.276  items 164  val return -6.505  updates 24961  56s

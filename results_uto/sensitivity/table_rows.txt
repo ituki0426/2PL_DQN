@@ -1,0 +1,63 @@
+提案手法（式\eqref{eq:reward}） & 0 & \textbf{0.594} & \textbf{0.416} & \textbf{0.300} & 0.223 & 170\\
+ & 0.5 & 0.600 & 0.419 & \textbf{0.300} & 0.222 & 167\\
+ & 0.9 & 0.665 & 0.451 & 0.311 & 0.223 & 158\\
+ & 1 & 0.718 & 0.483 & 0.337 & 0.238 & 156\\
+\hline
+対数分散減少 & 0 & 0.598 & 0.418 & 0.303 & 0.231 & 159\\
+ & 0.5 & 0.611 & 0.426 & 0.309 & 0.232 & 169\\
+ & 0.9 & 0.692 & 0.457 & 0.324 & 0.239 & 157\\
+ & 1 & 1.197 & 0.567 & 0.369 & 0.265 & 138\\
+\hline
+参照能力値FI & 0 & 0.598 & 0.421 & 0.301 & 0.221 & 193\\
+ & 0.5 & 0.608 & 0.421 & 0.301 & 0.220 & 180\\
+ & 0.9 & 0.664 & 0.449 & 0.310 & 0.222 & 166\\
+ & 1 & 0.657 & 0.438 & 0.315 & 0.231 & 158\\
+\hline
+既存手法（式\eqref{eq:reward-prev}） & 0 & 0.626 & 0.427 & \textbf{0.300} & \textbf{0.217} & 199\\
+ & 0.5 & 0.631 & 0.428 & 0.303 & 0.220 & 184\\
+ & 0.9 & 0.672 & 0.452 & 0.310 & 0.222 & 175\\
+ & 1 & 0.657 & 0.454 & 0.317 & 0.230 & 178\\
+\hline
+反応後推定値FI & 0 & 0.609 & 0.422 & \textbf{0.300} & 0.219 & 194\\
+ & 0.5 & 0.618 & 0.426 & \textbf{0.300} & 0.222 & 187\\
+ & 0.9 & 0.707 & 0.469 & 0.315 & 0.227 & 172\\
+ & 1 & 0.663 & 0.451 & 0.317 & 0.231 & 168\\
+\hline
+参照誤差減少 & 0 & 0.790 & 0.591 & 0.455 & 0.334 & 73\\
+ & 0.5 & 0.915 & 0.659 & 0.461 & 0.333 & 83\\
+ & 0.9 & 1.277 & 0.813 & 0.514 & 0.356 & 99\\
+ & 1 & 1.695 & 1.252 & 0.840 & 0.459 & 125\\
+\hline
+参照負二乗誤差 & 0 & 0.803 & 0.599 & 0.452 & 0.339 & 88\\
+ & 0.5 & 0.783 & 0.598 & 0.451 & 0.329 & 110\\
+ & 0.9 & 0.746 & 0.555 & 0.391 & 0.291 & 169\\
+ & 1 & 0.640 & 0.485 & 0.374 & 0.285 & 146\\
+\hline
+%% MFI: [0.623, 0.429, 0.301, 0.22]  MEPV: [0.597, 0.415, 0.299, 0.218]
+%% SD@5 per reward (max over gamma): {'prec_gain': 0.062, 'var_reduction': 0.434, 'fi_ref': 0.041, 'fi_hat_prev': 0.022, 'fi_hat_post': 0.017, 'err_reduction_ref': 0.345, 'neg_sq_err_ref': 0.031}
+%% paired diffs vs MFI
+  prec_gain_g0.0         - MFI      step  5: mean -0.0283  range [-0.0333, -0.0239]  all<0: True  all>0: False
+  prec_gain_g0.0         - MFI      step 10: mean -0.0123  range [-0.0219, -0.0032]  all<0: True  all>0: False
+  prec_gain_g0.0         - MFI      step 20: mean -0.0012  range [-0.0083, +0.0024]  all<0: False  all>0: False
+  prec_gain_g0.0         - MFI      step 40: mean +0.0030  range [+0.0002, +0.0050]  all<0: False  all>0: True
+  prec_gain_g0.5         - MFI      step  5: mean -0.0226  range [-0.0337, -0.0170]  all<0: True  all>0: False
+  prec_gain_g0.5         - MFI      step 10: mean -0.0100  range [-0.0159, +0.0004]  all<0: False  all>0: False
+  prec_gain_g0.5         - MFI      step 20: mean -0.0008  range [-0.0073, +0.0041]  all<0: False  all>0: False
+  prec_gain_g0.5         - MFI      step 40: mean +0.0017  range [+0.0003, +0.0042]  all<0: False  all>0: True
+  fi_ref_g0.0            - MFI      step  5: mean -0.0247  range [-0.0377, -0.0086]  all<0: True  all>0: False
+  fi_ref_g0.0            - MFI      step 10: mean -0.0081  range [-0.0166, -0.0005]  all<0: True  all>0: False
+  fi_ref_g0.0            - MFI      step 20: mean +0.0001  range [-0.0068, +0.0036]  all<0: False  all>0: False
+  fi_ref_g0.0            - MFI      step 40: mean +0.0005  range [+0.0003, +0.0006]  all<0: False  all>0: True
+  fi_ref_g0.5            - MFI      step  5: mean -0.0145  range [-0.0280, +0.0075]  all<0: False  all>0: False
+  fi_ref_g0.5            - MFI      step 10: mean -0.0079  range [-0.0184, +0.0041]  all<0: False  all>0: False
+  fi_ref_g0.5            - MFI      step 20: mean +0.0002  range [-0.0032, +0.0051]  all<0: False  all>0: False
+  fi_ref_g0.5            - MFI      step 40: mean +0.0001  range [-0.0035, +0.0039]  all<0: False  all>0: False
+  fi_hat_prev_g0.0       - MFI      step  5: mean +0.0037  range [+0.0011, +0.0060]  all<0: False  all>0: True
+  fi_hat_prev_g0.0       - MFI      step 10: mean -0.0021  range [-0.0034, -0.0014]  all<0: True  all>0: False
+  fi_hat_prev_g0.0       - MFI      step 20: mean -0.0013  range [-0.0045, +0.0012]  all<0: False  all>0: False
+  fi_hat_prev_g0.0       - MFI      step 40: mean -0.0029  range [-0.0038, -0.0017]  all<0: True  all>0: False
+%% prec_gain gamma 0 vs 0.5
+  prec_gain_g0.0         - prec_gain_g0.5 step  5: mean -0.0057  range [-0.0106, +0.0004]  all<0: False  all>0: False
+  prec_gain_g0.0         - prec_gain_g0.5 step 10: mean -0.0023  range [-0.0060, +0.0027]  all<0: False  all>0: False
+  prec_gain_g0.0         - prec_gain_g0.5 step 20: mean -0.0004  range [-0.0017, +0.0017]  all<0: False  all>0: False
+  prec_gain_g0.0         - prec_gain_g0.5 step 40: mean +0.0012  range [-0.0002, +0.0030]  all<0: False  all>0: False

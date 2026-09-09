@@ -1,0 +1,7 @@
+rep 5: asymptotic reference value from true-theta information 0.215
+rep 5: MFI                    RMSE@40 0.218  items 202
+rep 5: FIWL                   RMSE@40 0.215  items 196
+rep 5: MPWI                   RMSE@40 0.219  items 187
+rep 5: MEPV                   RMSE@40 0.219  items 186
+rep 5: existing               RMSE@40 0.258  items 73  val return 17.147  updates 39873  53s
+rep 5: proposed               RMSE@40 0.220  items 163  val return 21.068  updates 24997  60s

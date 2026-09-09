@@ -1,0 +1,24 @@
+A & 0.608 & 0.422 & \textbf{0.300} & \textbf{0.221} & 182\\
+B & 0.609 & 0.420 & 0.303 & 0.222 & 171\\
+C & \textbf{0.600} & \textbf{0.419} & \textbf{0.300} & 0.222 & 167\\
+%% MFI: [0.623, 0.429, 0.301, 0.22]
+  state_theta            - state_belief step  5: mean +0.0081  range [+0.0016, +0.0180]  all<0: False  all>0: True
+  state_theta            - state_belief step 10: mean +0.0028  range [-0.0066, +0.0143]  all<0: False  all>0: False
+  state_theta            - state_belief step 20: mean -0.0005  range [-0.0038, +0.0046]  all<0: False  all>0: False
+  state_theta            - state_belief step 40: mean -0.0007  range [-0.0040, +0.0054]  all<0: False  all>0: False
+  state_theta_step       - state_belief step  5: mean +0.0088  range [+0.0016, +0.0183]  all<0: False  all>0: True
+  state_theta_step       - state_belief step 10: mean +0.0014  range [-0.0071, +0.0112]  all<0: False  all>0: False
+  state_theta_step       - state_belief step 20: mean +0.0024  range [-0.0001, +0.0049]  all<0: False  all>0: False
+  state_theta_step       - state_belief step 40: mean -0.0003  range [-0.0005, -0.0000]  all<0: True  all>0: False
+  state_theta            - MFI      step  5: mean -0.0145  range [-0.0157, -0.0124]  all<0: True  all>0: False
+  state_theta            - MFI      step 10: mean -0.0072  range [-0.0153, -0.0002]  all<0: True  all>0: False
+  state_theta            - MFI      step 20: mean -0.0013  range [-0.0111, +0.0053]  all<0: False  all>0: False
+  state_theta            - MFI      step 40: mean +0.0011  range [-0.0037, +0.0061]  all<0: False  all>0: False
+  state_theta_step       - MFI      step  5: mean -0.0138  range [-0.0155, -0.0105]  all<0: True  all>0: False
+  state_theta_step       - MFI      step 10: mean -0.0087  range [-0.0146, -0.0047]  all<0: True  all>0: False
+  state_theta_step       - MFI      step 20: mean +0.0016  range [-0.0024, +0.0040]  all<0: False  all>0: False
+  state_theta_step       - MFI      step 40: mean +0.0014  range [+0.0002, +0.0037]  all<0: False  all>0: True
+  state_belief           - MFI      step  5: mean -0.0226  range [-0.0337, -0.0170]  all<0: True  all>0: False
+  state_belief           - MFI      step 10: mean -0.0100  range [-0.0159, +0.0004]  all<0: False  all>0: False
+  state_belief           - MFI      step 20: mean -0.0008  range [-0.0073, +0.0041]  all<0: False  all>0: False
+  state_belief           - MFI      step 40: mean +0.0017  range [+0.0003, +0.0042]  all<0: False  all>0: True

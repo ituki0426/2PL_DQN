@@ -1,0 +1,31 @@
+I=  500 batch=   1 MFI                   7.1 us / examinee-step
+I=  500 batch=   1 FIWL                 35.7 us / examinee-step
+I=  500 batch=   1 MPWI                 35.7 us / examinee-step
+I=  500 batch=   1 MEPV                 53.4 us / examinee-step
+I=  500 batch=   1 DQN (proposed)       49.5 us / examinee-step
+I=  500 batch=2000 MFI                   2.5 us / examinee-step
+I=  500 batch=2000 FIWL                  8.8 us / examinee-step
+I=  500 batch=2000 MPWI                  8.8 us / examinee-step
+I=  500 batch=2000 MEPV                 11.0 us / examinee-step
+I=  500 batch=2000 DQN (proposed)        8.8 us / examinee-step
+I= 2000 batch=   1 MFI                  14.4 us / examinee-step
+I= 2000 batch=   1 FIWL                 40.2 us / examinee-step
+I= 2000 batch=   1 MPWI                 40.1 us / examinee-step
+I= 2000 batch=   1 MEPV                 78.8 us / examinee-step
+I= 2000 batch=   1 DQN (proposed)       72.3 us / examinee-step
+I= 2000 batch=2000 MFI                  10.1 us / examinee-step
+I= 2000 batch=2000 FIWL                 10.8 us / examinee-step
+I= 2000 batch=2000 MPWI                 10.7 us / examinee-step
+I= 2000 batch=2000 MEPV                 19.6 us / examinee-step
+I= 2000 batch=2000 DQN (proposed)        9.8 us / examinee-step
+I= 8000 batch=   1 MFI                  44.6 us / examinee-step
+I= 8000 batch=   1 FIWL                 58.9 us / examinee-step
+I= 8000 batch=   1 MPWI                 58.8 us / examinee-step
+I= 8000 batch=   1 MEPV                390.1 us / examinee-step
+I= 8000 batch=   1 DQN (proposed)       90.3 us / examinee-step
+I= 8000 batch=2000 MFI                  44.4 us / examinee-step
+I= 8000 batch=2000 FIWL                 18.6 us / examinee-step
+I= 8000 batch=2000 MPWI                 18.7 us / examinee-step
+I= 8000 batch=2000 MEPV                 56.6 us / examinee-step
+I= 8000 batch=2000 DQN (proposed)       14.3 us / examinee-step
+threads: torch 1 ; BLAS env OMP/OPENBLAS/MKL = 1 ; numpy 2.0.2

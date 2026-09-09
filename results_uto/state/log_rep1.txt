@@ -1,0 +1,8 @@
+rep 1: asymptotic reference value from true-theta information 0.216
+rep 1: MFI                    RMSE@40 0.218  items 203
+rep 1: FIWL                   RMSE@40 0.219  items 195
+rep 1: MPWI                   RMSE@40 0.220  items 183
+rep 1: MEPV                   RMSE@40 0.217  items 184
+rep 1: state_theta            RMSE@40 0.225  items 174  val return 21.059  updates 24997  78s
+rep 1: state_theta_step       RMSE@40 0.219  items 175  val return 21.160  updates 24997  133s
+rep 1: state_belief           RMSE@40 0.219  items 165  val return 21.214  updates 24997  65s

@@ -1,0 +1,17 @@
+rep 3: asymptotic reference value from true-theta information 0.215
+rep 3: MFI                    RMSE@40 0.221  items 201
+rep 3: FIWL                   RMSE@40 0.221  items 190
+rep 3: MPWI                   RMSE@40 0.223  items 185
+rep 3: MEPV                   RMSE@40 0.220  items 184
+rep 3: existing               RMSE@40 0.263  items 73  val return 16.739  updates 39873  67s
+rep 3: existing+constraint    RMSE@40 0.223  items 183  val return 22.451  updates 39873  140s
+rep 3: existing+state         RMSE@40 0.269  items 62  val return 17.041  updates 39873  60s
+rep 3: existing+reward        RMSE@40 0.273  items 69  val return 16.012  updates 39873  50s
+rep 3: existing+gamma         RMSE@40 0.257  items 82  val return 17.238  updates 39873  49s
+rep 3: existing+learning      RMSE@40 0.259  items 82  val return 17.973  updates 24997  54s
+rep 3: proposed               RMSE@40 0.225  items 160  val return 21.213  updates 24997  60s
+rep 3: proposed-constraint    RMSE@40 0.243  items 75  val return 18.413  updates 24997  60s
+rep 3: proposed-state         RMSE@40 0.222  items 191  val return 21.055  updates 24997  53s
+rep 3: proposed-reward        RMSE@40 0.222  items 183  val return 23.148  updates 24997  59s
+rep 3: proposed-gamma         RMSE@40 0.226  items 173  val return 21.287  updates 24997  53s
+rep 3: proposed-learning      RMSE@40 0.243  items 187  val return 19.417  updates 39873  48s
