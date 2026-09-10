@@ -1,0 +1,9 @@
+name,n_responses,n_participants,n_items,n_categories,density,responses_per_participant,construct_type,construct_name
+criticalperiod_syntax,107483095,1131401,95,2,1.0,95.0,Cognitive/educational,Syntax questions
+vocabulary_iq,912975,12173,75,2,1.0,75.0,Personality,Vocabulary IQ Test
+choi_2026_cmsce_2021_2,1745025,6585,265,2,1.0,265.0,N/A,N/A
+psychoneurotic_inventory,698204,6019,116,2,1.0,116.0,Affective/mental health,Woodworth Psychoneurotic Inventory
+christensen_2018_wsssf_5831,349860,5831,60,2,1.0,60.0,Affective/mental health,Schizotypy (Wisconsin Schizotypy Scales–Short Forms) with n=5831
+choi_2026_cmsce_2019_2,1681386,5586,301,2,1.0,301.0,N/A,N/A
+tma,270500,5410,50,2,1.0,50.0,Affective/mental health,Taylor Manifest Anxiety Scale
+choi_2026_cmsce_2020_1,1637952,5388,304,2,1.0,304.0,N/A,N/A
