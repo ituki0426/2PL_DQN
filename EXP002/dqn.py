@@ -23,6 +23,8 @@ validation set and the mean episodic return of the condition's own reward is rec
 parameters with the highest validation return are kept. No true ability is used anywhere.
 Random streams: training and validation use streams derived from (cfg.seed, tag) so that they
 never coincide with the evaluation streams of run_cat.
+Device: use MPS when available, otherwise CPU. NumPy simulation and replay storage stay on
+CPU; network inference and gradient updates run on the selected device.
 """
 from dataclasses import dataclass
 
@@ -81,10 +83,11 @@ class DQNAgent:
         self.n_items = bank.shape[0]
         self.n_in = STATE_DIM[cfg.state]
         h2 = cfg.hidden2 or cfg.hidden
+        self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
         torch.manual_seed(cfg.seed)
-        self.q = QNet(self.n_in, cfg.hidden, h2, self.n_items)
+        self.q = QNet(self.n_in, cfg.hidden, h2, self.n_items).to(self.device)
         self._clamp()  # constrain before the target copy so both nets start identical
-        self.q_target = QNet(self.n_in, cfg.hidden, h2, self.n_items)
+        self.q_target = QNet(self.n_in, cfg.hidden, h2, self.n_items).to(self.device)
         self.q_target.load_state_dict(self.q.state_dict())
         self.opt = torch.optim.Adam(self.q.parameters(), lr=cfg.lr)
 
@@ -99,9 +102,9 @@ class DQNAgent:
 
     def greedy_from_features(self, feats, mask):
         with torch.no_grad():
-            qv = self.q(torch.from_numpy(feats)).numpy()
-        qv[mask] = -np.inf
-        return qv.argmax(axis=1)
+            qv = self.q(torch.from_numpy(feats).to(self.device))
+            qv = qv.masked_fill(torch.from_numpy(mask).to(self.device), -torch.inf)
+            return qv.argmax(dim=1).cpu().numpy()
 
     def __call__(self, theta_hat, step, mask, items, resp):  # policy interface for run_cat
         log_var = np.log(posterior(self.bank, items, resp)[1]) if self.cfg.state == "belief" else None
@@ -238,12 +241,12 @@ class DQNAgent:
     def _update(self, rng, n_stored, buf_s, buf_a, buf_r, buf_s2, buf_done, buf_mask2):
         cfg = self.cfg
         idx = rng.integers(0, n_stored, size=cfg.batch_size)
-        s = torch.from_numpy(buf_s[idx])
-        a = torch.from_numpy(buf_a[idx])
-        r = torch.from_numpy(buf_r[idx])
-        s2 = torch.from_numpy(buf_s2[idx])
-        done = torch.from_numpy(buf_done[idx])
-        mask2 = torch.from_numpy(buf_mask2[idx])
+        s = torch.from_numpy(buf_s[idx]).to(self.device)
+        a = torch.from_numpy(buf_a[idx]).to(self.device)
+        r = torch.from_numpy(buf_r[idx]).to(self.device)
+        s2 = torch.from_numpy(buf_s2[idx]).to(self.device)
+        done = torch.from_numpy(buf_done[idx]).to(self.device)
+        mask2 = torch.from_numpy(buf_mask2[idx]).to(self.device)
 
         q_sa = self.q(s).gather(1, a[:, None]).squeeze(1)
         with torch.no_grad():

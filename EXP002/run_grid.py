@@ -1,7 +1,7 @@
 """Run a named grid of conditions on one simulated 2PLM bank, one replication per process.
 
   .venv/bin/python run_grid.py --grid main --rep 4            # one replication
-  .venv/bin/python run_grid.py --grid main --aggregate        # mean / SD over replications
+  .venv/bin/python run_grid.py --grid main --aggregate        # mean / SD and mean.png over replications
 
 Grids (results go to result/<experiment>/<grid>/; section numbers refer to ../Paper/main.tex):
   main         existing and proposed                                        6.2  confirmatory, reps 4-6
@@ -137,6 +137,28 @@ def run_rep(args, out):
     df.to_csv(existing, index=False)
 
 
+def plot_mean(agg, out, order):
+    """Save mean RMSE against step for each condition without opening a GUI."""
+    from matplotlib.backends.backend_agg import FigureCanvasAgg
+    from matplotlib.figure import Figure
+    from matplotlib.ticker import MaxNLocator
+
+    fig = Figure(figsize=(9, 5.5), layout="constrained")
+    FigureCanvasAgg(fig)
+    ax = fig.subplots()
+    for condition in order:
+        sub = agg[agg.condition == condition].sort_values("step")
+        ax.plot(sub.step, sub.rmse_mean, label=condition, linewidth=1.8)
+    ax.set_xlabel("step")
+    ax.set_ylabel("Mean RMSE")
+    ax.set_title(f"{__package__} / {out.name}: RMSE by step")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.grid(True, alpha=0.25)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1), frameon=False)
+    fig.savefig(out / "mean.png", dpi=180)
+
+
 def aggregate(out):
     files = sorted(glob.glob(str(out / "rep*.csv")))
     df = pd.concat([pd.read_csv(f) for f in files])
@@ -146,6 +168,7 @@ def aggregate(out):
     agg = agg.reset_index()
     agg.to_csv(out / "mean.csv", index=False)
     order = list(dict.fromkeys(df.condition))
+    plot_mean(agg, out, order)
     print(f"RMSE mean (SD) over {df.rep.nunique()} replications (reps {sorted(df.rep.unique().tolist())}); steps {SHOW_STEPS}; last = distinct items")
     for cond in order:
         sub = agg[agg.condition == cond]
@@ -158,7 +181,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--grid", required=True, choices=list(GRIDS))
     ap.add_argument("--rep", type=int)
-    ap.add_argument("--aggregate", action="store_true")
+    ap.add_argument("--aggregate", action="store_true", help="save mean.csv and a mean RMSE vs step plot (mean.png)")
     ap.add_argument("--n-items", type=int, default=500)
     ap.add_argument("--test-length", type=int, default=40)
     ap.add_argument("--n-test", type=int, default=2000)
