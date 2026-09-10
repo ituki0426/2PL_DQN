@@ -1,6 +1,6 @@
 # CAT/Experiments: 推定値の不確実性を考慮した状態と報酬に基づく深層強化学習型 CAT の項目選択（実装・実験）
 
-最終更新: 2026-09-09（EXP001 / EXP002 の選択と実験別の結果保存に対応）
+最終更新: 2026-09-10（EXP004：CUDA・MLE＋Dodd 版と Colab 実行を追加）
 
 ## この作業領域は何か
 
@@ -12,6 +12,8 @@ MFI の項目選択規準と一致する報酬）を整理し，最尤推定値�
 原稿は `../Paper/main.tex`（v8，15 頁）．原稿の付録 1・2（削除した第 2・3 段階の検討）の転記元は `../Paper/appendix_sources/` であり，本フォルダのコードとは独立である．
 
 ## 構成
+
+各実験の仕様・学習設定・実行方法：[EXP001（CPU・MLE＋Dodd）](EXP001/exp_summary.md)、[EXP002（MPS・MLE＋Dodd）](EXP002/exp_summary.md)、[EXP003（CPU・EAP）](EXP003/exp_summary.md)、[EXP004（CUDA・MLE＋Dodd）](EXP004/exp_summary.md)。
 
 ```
 2PL_DQN/
@@ -27,11 +29,30 @@ MFI の項目選択規準と一致する報酬）を整理し，最尤推定値�
 │   ├── irt.py, scenarios.py, simulate.py, rules.py, dqn.py
 │   └── run_grid.py, make_tables.py, analyze_selection.py, benchmark_cost.py
 ├── EXP002/                 EXP001 のコピー。各ファイルを独立して変更可能
+├── EXP003/                 EXP001 を基に能力推定を EAP に変更した CPU 版
+├── EXP004/                 EXP001 を基に DQN を CUDA 対応にした版（CPU 自動切り替え）
 └── result/
     ├── EXP001/             既存の results_uto の結果を移動済み
     │   └── <grid>/         rep<k>.csv, mean.csv, 表, ログ, 図など
-    └── EXP002/             EXP002 の実行結果（初期状態は空）
+    ├── EXP002/             EXP002 の実行結果
+    ├── EXP003/             EXP003 の実行結果
+    └── EXP004/             EXP004 の実行結果（初期状態は空）
 ```
+
+## IRW データの wide 形式への変換
+
+`irw_datasets/` の long 形式（`id`, `item`, `resp`）を、行＝回答者、列＝項目、値＝回答の CSV に変換します。
+
+```sh
+uv run python convert_irw_to_wide.py
+# 別のフォルダに保存する場合
+uv run python convert_irw_to_wide.py --output-dir irw_datasets_wide
+```
+
+元の CSV はそのまま残し、`tma.csv` なら `tma_wide.csv` として保存します。
+先頭列は `id`、以降の列名は項目 ID です。行・列は元データの出現順を維持し、ID の先頭の0や回答値 `NA` もそのまま保存します。
+回答者と項目の組み合わせが存在しないセルは空欄にします。同じ `id`・`item` の重複がある場合はエラーで停止します。
+再実行時は `*_wide.csv` を入力から除外し、同名の変換済みファイルを更新します。
 
 ## 原稿の節と実験の対応
 
@@ -64,13 +85,32 @@ uv sync --locked
 依存関係を追加するときは `uv add <パッケージ名>` を使用してください。
 `requirements.txt` は Colab の pip インストール用に残しています。
 
-全コマンドで `--experiment EXP001` / `--experiment EXP002`（短縮形 `--exp`）を指定できます。
+ローカルの Notebook 用に `ipykernel` と `pip` を開発用依存関係（`dev`）に含めています。
+通常の `uv sync --locked` でインストールされます。Notebook のカーネルには、このリポジトリの `.venv/bin/python` を選択してください。
+
+全コマンドで `--experiment EXP001` / `--experiment EXP002` / `--experiment EXP003` / `--experiment EXP004`（短縮形 `--exp`）を指定できます。
 省略時は `EXP001` です。`--list-experiments` で選択肢を表示します。
-`EXP002` は初期状態では `EXP001` と同じ内容です。実験条件は各パッケージの `run_grid.py` 内で変更します。
+`EXP002` は `EXP001` を基に、DQN の学習・推論に MPS を使用する実装です。
+MPS が利用できない環境では自動で CPU に切り替わります。
+能力推定・反応生成・リプレイバッファは NumPy による CPU 処理です。
+実験条件は各パッケージの `run_grid.py` 内で変更します。
+
+`EXP003` は `EXP001` を基に、全条件の能力推定を EAP（事後平均）に統一した CPU 版です。
+事前分布は `N(0,1)`、計算範囲は −4〜4 の81点、回答前の初期推定値は全員 0 です。
+全問正解・全問不正解も EAP で推定します。DQN の学習・検証・評価、解析的な規則、選択分析、速度測定で同じ推定法を使います。
+参照能力値を使う報酬も、回答記録全体から求めた EAP を参照します。初期の事後分散も同じ格子分布から計算します。
+`existing` / `proposed` は項目選択・学習設定を表す条件名であり、EXP003 では両方とも EAP 推定です。
+`--grid guess` では反応生成が3PL、推定は2PLのままです。学習人数などは EXP001 と同じです。
+選択分析の初回は全員の推定値が同じため、回帰係数 `slope_b_on_prev` は欠損値になります。
+
+`EXP004` は `EXP001` を基にした CUDA 版です。能力推定は MLE＋Dodd のままで、DQN の学習・推論に CUDA を使います。ネットワーク・特徴量・報酬・リプレイバッファの浮動小数点値は FP64 です（CPU に切り替わった場合も同じ）。
+CUDA が利用できない環境では自動で CPU に切り替わり、使用デバイスをログに表示します。能力推定・反応生成・リプレイバッファは CPU 上です。
+Colab では [run_on_colab.ipynb](run_on_colab.ipynb) を開き、ランタイムを GPU に設定して上から実行してください。Notebook の既定値は `EXPERIMENT = "EXP004"` です。
+CPU/GPU 間では浮動小数点演算の違いにより、同じ乱数種でも学習結果が完全一致するとは限りません。
 
 ```sh
 # 実験を選択
-EXP=EXP001  # EXP002 に変更可能
+EXP=EXP001  # EXP002 / EXP003 / EXP004 に変更可能
 OUT="result/$EXP"
 mkdir -p "$OUT"/{main,sensitivity,state,ablation,guess,selection,cost}
 
@@ -92,7 +132,12 @@ uv run python run_grid.py --experiment "$EXP" --grid main --rep 4 --quick --out 
 標準の保存先はリポジトリ内の `result/<実験名>/<grid>/` です。
 `--out /tmp/smoke` を指定した場合も実験名で分離し、`/tmp/smoke/<実験名>/<grid>/` に保存します。
 集計・表生成でも同じ `--out` を指定してください。分析図は `result/<実験名>/selection/fig_selection.pdf` に保存します。
-今後は `EXP001/` を `EXP003/` などにコピーすると、実行時の選択肢に自動で追加されます。
+`EXP001`・`EXP002`・`EXP003`・`EXP004` の `--aggregate` は `mean.csv` に加えて `mean.png` も保存します。
+横軸は `step`、縦軸は平均 RMSE（`rmse_mean`）で、条件ごとの折れ線を描画します。
+例えば `uv run python run_grid.py --experiment EXP002 --grid main --aggregate` は
+`result/EXP002/main/mean.png` を生成します。`--experiment EXP001` なら
+`result/EXP001/main/mean.png` に保存します。再集計すると CSV・画像ともに上書きします。
+今後は `EXP001/` を `EXP005/` などにコピーすると、実行時の選択肢に自動で追加されます。
 
 1 条件の学習は提案側の設定で約 1 分，既存側の設定で約 1 分（Apple M 系 CPU，2 スレッド）．`guess` は 3PL の反応生成のため約 2 分．
 
@@ -100,6 +145,7 @@ uv run python run_grid.py --experiment "$EXP" --grid main --rep 4 --quick --out 
 
 - バンクは `(基本種 20260904, 99)` で固定．反復 k の種は 20260904+k−1．推測パラメータは `(種, 30)`，評価受験者は `(種, 20)`，
   評価の初期値と反応は `(種+100, 0/1)`，DQN の学習・検証は `(種, 10/11)` と `種*7+12`．
+- EXP003 の初期推定値は 0。学習時は EXP001 の初期値用乱数を消費してから破棄し、後続の探索・反応用の乱数系列を維持します。
 - `scenarios.py` は推測パラメータの前に長さ I の正規乱数を 2 回消費する（旧版で項目パラメータの誤差に使っていた乱数．記録済みの結果を同じ種で再現するために残している）．
 - 反復 1-3 は設計の選択（探索），反復 4-6 は評価（確証）に使い分ける．
 - Q 関数の選択は検証集団における当該報酬の収益（提案では 1/V_L − 1/V_0 の平均）．真の能力は使わない．
