@@ -1,0 +1,2 @@
+"input_file","model","method","theta_mean","theta_variance","score_method","logistic_D","n_input","n_used","n_all_missing_removed","n_items","n_missing_input","converged","finite_parameters","finite_scores","iterations","logLik","AIC","BIC","quadpts","max_cycles","tol","seed","elapsed_seconds","R_version","mirt_version"
+"/Users/itsuki/2PL_DQN/irw_datasets/choi_2026_cmsce_2019_2_wide.csv","unidimensional_2PL","MML_EM",0,1,"EAP",1,5586,5586,0,301,0,TRUE,TRUE,TRUE,148,-825818.674548648,1652841.3490973,1656831.41638269,61,1000,1e-04,20260910,22.991,"4.6.0","1.46.1"
