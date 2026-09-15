@@ -54,6 +54,59 @@ uv run python convert_irw_to_wide.py --output-dir irw_datasets_wide
 回答者と項目の組み合わせが存在しないセルは空欄にします。同じ `id`・`item` の重複がある場合はエラーで停止します。
 再実行時は `*_wide.csv` を入力から除外し、同名の変換済みファイルを更新します。
 
+## IRW の2PL項目パラメータ推定（R / mirt）
+
+`estimate_irw_2pl.R` は `irw_datasets/*_wide.csv` をファイルごとに独立して推定します。
+先頭の `id` 列を除き、全受験者・全項目を用いた1次元2PLの周辺最尤推定（MML、EM法）を行います。
+能力分布は `N(0,1)` に固定し、項目パラメータに事前分布は設定しません。ファイル間の尺度の共通化は行いません。
+項目推定後、同じモデルと各受験者の全回答から能力値を EAP（事後平均）で推定します。
+
+```sh
+# mirt が未インストールの場合のみ実行（R は uv の管理対象外）
+Rscript -e 'install.packages("mirt", repos="https://cloud.r-project.org")'
+
+# すべての wide データを個別に推定
+Rscript estimate_irw_2pl.R
+
+# 特定のファイルだけ推定
+Rscript estimate_irw_2pl.R --file choi_2026_cmsce_2019_2_wide.csv
+
+# 保存先・収束設定を変更
+Rscript estimate_irw_2pl.R --output-dir /tmp/irw_2pl --max-cycles 2000 --quadpts 81 --tol 0.0001
+
+# 合成データによる動作確認
+Rscript tests/test_estimate_irw_2pl.R
+```
+
+既定値は数値積分61点、EM上限1,000回、収束許容値 `1e-4`、乱数種 `20260910` です。
+各ファイルの推定開始時に同じ乱数種を設定します。項目パラメータの標準誤差は計算しません。
+`mirt(..., model=1, itemtype="2PL", method="EM", dentype="Gaussian")` で推定し、
+`coef(..., IRTpars=TRUE)` で識別力 `a`・困難度 `b` を取得します。
+正答確率は `P=1/(1+exp(-a*(theta-b)))`（スケール係数 D=1、推測パラメータ0）です。
+仕様の参照：[mirt の推定設定](https://philchalmers.github.io/mirt/docs/reference/mirt.html)、
+[項目パラメータの変換](https://philchalmers.github.io/mirt/html/coef-method.html)。
+
+出力先は `result/IRW_2PL/<元ファイル名から _wide.csv を除いた名前>/` です。
+
+| ファイル | 内容 |
+|---|---|
+| `item_parameters.csv` | 元の項目ID（`item`）、識別力 `a`、困難度 `b`、観測回答数、正答数、収束フラグ |
+| `person_scores.csv` | 元の受験者ID（`id`）、EAP能力推定値 `theta_EAP`、事後標準偏差 `SE_EAP`、観測回答数、正答数 |
+| `fit_summary.csv` | 使用人数・項目数・欠損数、収束状態、反復回数、対数尤度、AIC/BIC、設定、R/mirtのバージョン |
+| `model.rds` | 推定モデル・元の項目ID・集計情報のリスト。`readRDS(path)$model` でモデルを取得 |
+| `warnings.txt` | 推定時の警告。警告がなければ空ファイル |
+| `session_info.txt` | Rとパッケージの実行環境 |
+
+元データは変更せず、再実行すると同じ保存先の推定結果を更新します。
+回答値は0/1のみとし、空欄・`NA` は欠損として `mirt` に渡します。全項目欠損の受験者は除外して人数を記録します。
+全問正解・全問不正解の受験者は含めます。回答がすべて同じ値の項目・全欠損項目、重複ID、不正な回答値はエラーにします。
+能力推定には `fscores(..., method="EAP", full.scores.SE=TRUE)` を使います。`theta_EAP` は項目推定時に固定した
+`N(0,1)` 尺度上の事後平均、`SE_EAP` は事後標準偏差です。全項目欠損者も `person_scores.csv` に残しますが、
+`theta_EAP` と `SE_EAP` は `NA` になります。
+識別力に正値制約は設けません。`a <= 0` の項目があれば、推定値を保持して `warnings.txt` に警告を記録します。
+未収束の場合は暫定結果を `converged=FALSE` として保存します。他ファイルの処理を続けた後、
+エラー・未収束・非有限パラメータが1件でもあれば終了コード1を返します。
+
 ## 原稿の節と実験の対応
 
 | 節 | 内容 | 実行 | 条件 | 反復 | 転記元 |
