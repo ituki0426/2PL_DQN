@@ -19,7 +19,7 @@ from .simulate import metrics_by_step, run_cat
 
 
 EXISTING = dict(state="theta", reward="fi_hat_prev", positive="all",
-    hidden=50, hidden2=30, gamma=0.1, buffer_size=1_000, n_env=1,
+    hidden=50, hidden2=30, gamma=0.1, buffer_size=1_000, n_env=32,
     target_every=40, eps_start=0.1, eps_end=0.1)
 PROPOSED = dict(state="belief", reward="prec_gain", positive="none",
     hidden=64, hidden2=0, gamma=0.5, buffer_size=50_000, n_env=32,
