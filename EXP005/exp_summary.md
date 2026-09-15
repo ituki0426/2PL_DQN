@@ -21,9 +21,9 @@ uv run python run_grid.py --experiment EXP005 \
   --dataset choi_2026_cmsce_2019_2 \
   --responses irw_datasets/choi_2026_cmsce_2019_2_wide.csv --rep 1
 
-# データセットごとにDQNを5反復。解析的な4規則は初回のみ評価する
+# データセットごとにDQNを10反復
 for dataset in choi_2026_cmsce_2019_2 choi_2026_cmsce_2020_1 choi_2026_cmsce_2021_2; do
-  for rep in 1 2 3 4 5; do
+  for rep in 1 2 3 4 5 6 7 8 9 10; do
     uv run python run_grid.py --experiment EXP005 --dataset "$dataset" --rep "$rep"
   done
   uv run python run_grid.py --experiment EXP005 --dataset "$dataset" --aggregate
@@ -39,7 +39,7 @@ uv run python run_grid.py --experiment EXP005 --dataset choi_2026_cmsce_2019_2 \
 
 `--grid` は省略可能で、初回実装は `main` のみ。`--conditions existing` または
 `--conditions proposed` でDQN条件を限定でき、既存の同じ反復のCSVへ併合する。
-`--rep` は1〜5。`--n-epochs` の既定値は両条件とも5、`--test-length` は40。
+`--rep` は1〜10。`--n-epochs` の既定値は両条件とも5、`--test-length` は40。
 検証の既定頻度はエポック終了時のみ（`--eval-every 0`）。
 検証は必ずエポック終了時に実行し、`--eval-every N` を指定すると累積学習受験者数が
 Nの倍数を超えたバッチの終了時にも実行する。同じ時点の検証は重複しない。

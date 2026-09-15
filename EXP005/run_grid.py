@@ -112,12 +112,20 @@ def prepare(args, out):
         configs=configs, quick=args.quick, n_items=len(data.bank), n_respondents=len(data.responses),
         excluded_item_ids=data.excluded_item_ids, reference="theta_reference = full-response theta_EAP",
         model_selection="maximum mean validation episode return; RMSE is diagnostic only",
-        planned_dqn_replications=5, limitation=LIMITATION)
+        planned_dqn_replications=10, limitation=LIMITATION)
     manifest = out / "metadata.json"
     with result_lock(out / ".metadata.lock"):
         _drop_v1_layout(out)
-        if manifest.exists() and json.loads(manifest.read_text()) != metadata:
-            raise ValueError("Existing results use different data/settings. Use a separate --out root.")
+        if manifest.exists():
+            existing_metadata = json.loads(manifest.read_text())
+            # Expanding the planned replication count does not invalidate completed reps.
+            # Upgrade only this bookkeeping field; continue to reject real setting changes.
+            if existing_metadata.get("planned_dqn_replications") == 5:
+                upgraded = dict(existing_metadata)
+                upgraded["planned_dqn_replications"] = 10
+                existing_metadata = upgraded
+            if existing_metadata != metadata:
+                raise ValueError("Existing results use different data/settings. Use a separate --out root.")
         manifest.write_text(json.dumps(metadata, indent=2, ensure_ascii=False) + "\n")
         save_csv(splits, out / f"splits_rep{args.rep}.csv")
         save_csv(pd.DataFrame({"item": data.item_ids, "a": data.bank[:, 0], "b": data.bank[:, 1]}),
@@ -229,7 +237,7 @@ def aggregate(out):
         plot_mean(agg, out)
     print(LIMITATION)
     print("All conditions are re-evaluated per rep because the test split is resampled "
-          "(split_seed = base + rep - 1). DQN target: 5 replications.")
+          "(split_seed = base + rep - 1). DQN target: 10 replications.")
     steps = [s for s in SHOW_STEPS if s in set(agg.step)] or [int(agg.step.max())]
     print(agg[agg.step.isin(steps)].to_string(index=False))
     return agg
@@ -240,7 +248,7 @@ def main(argv=None):
     parser.add_argument("--dataset", required=True, choices=DATASETS)
     parser.add_argument("--grid", default="main", choices=["main"])
     action = parser.add_mutually_exclusive_group(required=True)
-    action.add_argument("--rep", type=int, choices=range(1, 6))
+    action.add_argument("--rep", type=int, choices=range(1, 11))
     action.add_argument("--aggregate", action="store_true")
     parser.add_argument("--data-root", type=Path, default=PROJECT_ROOT / "data")
     parser.add_argument("--responses", type=Path, help="explicit wide response CSV (id column required)")

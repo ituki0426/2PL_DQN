@@ -37,7 +37,7 @@ def main(argv=None):
     parser.add_argument("--data-root", default=PROJECT_ROOT / "data")
     parser.add_argument("--responses")
     parser.add_argument("--screening", choices=["positive", "strict"], default="positive")
-    parser.add_argument("--rep", type=int, choices=range(1, 6), default=1)
+    parser.add_argument("--rep", type=int, choices=range(1, 11), default=1)
     parser.add_argument("--split-seed", type=int, default=SPLIT_SEED)
     parser.add_argument("--test-length", type=int, default=40)
     parser.add_argument("--out")

@@ -203,6 +203,25 @@ class TrainingTests(unittest.TestCase):
 
 
 class CLITests(unittest.TestCase):
+    def test_rep_10_upgrades_planned_replication_metadata(self):
+        with tempfile.TemporaryDirectory() as temporary, redirect_stdout(io.StringIO()):
+            root = Path(temporary)
+            fixture(root)
+            args = ["--dataset", DATASETS[0], "--data-root", str(root), "--out", str(root / "out"),
+                    "--test-length", "3", "--n-epochs", "1", "--threads", "1",
+                    "--conditions", "proposed"]
+            main(args + ["--rep", "1"])
+            out = root / "out" / "EXP005" / DATASETS[0] / "main"
+            manifest = out / "metadata.json"
+            metadata = json.loads(manifest.read_text())
+            metadata["planned_dqn_replications"] = 5
+            manifest.write_text(json.dumps(metadata))
+
+            main(args + ["--rep", "10"])
+
+            self.assertTrue((out / "rep10.csv").is_file())
+            self.assertEqual(json.loads(manifest.read_text())["planned_dqn_replications"], 10)
+
     def test_run_per_rep_split_aggregate_and_settings_guard(self):
         with tempfile.TemporaryDirectory() as temporary, redirect_stdout(io.StringIO()):
             root = Path(temporary)

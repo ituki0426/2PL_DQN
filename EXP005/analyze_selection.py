@@ -146,7 +146,7 @@ def load_agent(model_path, bank, item_ids, dataset, test_length):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", required=True, choices=DATASETS)
-    parser.add_argument("--rep", type=int, choices=range(1, 6), default=1)
+    parser.add_argument("--rep", type=int, choices=range(1, 11), default=1)
     parser.add_argument("--data-root", type=Path, default=PROJECT_ROOT / "data")
     parser.add_argument("--responses", type=Path)
     parser.add_argument("--screening", choices=["positive", "strict"], default="positive")
