@@ -1,4 +1,4 @@
-"""Analyze items selected from real EXP005 responses by MFI, MEPV and the proposed DQN."""
+"""Analyze items selected from real EXP005 responses by MFI, FIWL and the proposed DQN."""
 import argparse
 from pathlib import Path
 
@@ -13,13 +13,13 @@ from experiment_runner import PROJECT_ROOT, result_directory
 from .data import DATASETS, SPLIT_SEED, load_dataset, split_respondents
 from .dqn import DQNAgent, DQNConfig
 from .irt import info, posterior
-from .rules import MEPVPolicy, MFIPolicy
+from .rules import MFIPolicy, WeightedInfoPolicy
 from .simulate import run_cat
 
 
-METHODS = ("MFI", "MEPV", "DQN")
-COLORS = {"MFI": "#2a78d6", "MEPV": "#1baf7a", "DQN": "#eb6834"}
-LABELS = {"MFI": "MFI", "MEPV": "MEPV", "DQN": "Proposed"}
+METHODS = ("MFI", "FIWL", "DQN")
+COLORS = {"MFI": "#2a78d6", "FIWL": "#1baf7a", "DQN": "#eb6834"}
+LABELS = {"MFI": "MFI", "FIWL": "FIWL", "DQN": "Proposed"}
 
 
 def trace_run(policy, bank, responses, test_length, batch_size):
@@ -174,7 +174,8 @@ def main(argv=None):
 
     frames = []
     for method, policy in (("MFI", MFIPolicy(data.bank)),
-                           ("MEPV", MEPVPolicy(data.bank)), ("DQN", agent)):
+                           ("FIWL", WeightedInfoPolicy(data.bank, "fiwl")),
+                           ("DQN", agent)):
         history, items, resp, previous = trace_run(
             policy, data.bank, data.responses[test_indices], args.test_length,
             args.eval_batch_size)
