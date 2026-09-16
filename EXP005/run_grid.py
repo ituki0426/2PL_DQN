@@ -1,4 +1,4 @@
-"""Run main or reward-by-discount sensitivity conditions on real responses."""
+"""Run main, sensitivity, state, or ablation conditions on real responses."""
 import argparse
 from contextlib import contextmanager
 from dataclasses import asdict
@@ -25,6 +25,33 @@ PROPOSED = dict(state="belief", reward="prec_gain", positive="none",
     hidden=64, hidden2=0, gamma=0.5, buffer_size=50_000, n_env=32,
     target_every=500, eps_start=1.0, eps_end=0.05)
 CONDITIONS = {"existing": EXISTING, "proposed": PROPOSED}
+FACTORS = {
+    "constraint": ("positive",),
+    "state": ("state",),
+    "reward": ("reward",),
+    "gamma": ("gamma",),
+    "learning": ("hidden", "hidden2", "buffer_size", "target_every",
+                 "eps_start", "eps_end"),
+}
+
+
+def ablation_grid():
+    def build(base, other, flipped=None):
+        config = dict(base)
+        if flipped:
+            for key in FACTORS[flipped]:
+                config[key] = other[key]
+        return config
+
+    grid = {"existing": build(EXISTING, PROPOSED)}
+    for factor in FACTORS:
+        grid[f"existing+{factor}"] = build(EXISTING, PROPOSED, factor)
+    grid["proposed"] = build(PROPOSED, EXISTING)
+    for factor in FACTORS:
+        grid[f"proposed-{factor}"] = build(PROPOSED, EXISTING, factor)
+    return grid
+
+
 SENSITIVITY_REWARDS = ("prec_gain", "var_reduction", "fi_ref", "fi_hat_prev",
                        "fi_hat_post", "err_reduction_ref", "neg_sq_err_ref")
 SENSITIVITY_GAMMAS = (0.0, 0.5, 0.9, 1.0)
@@ -32,7 +59,13 @@ SENSITIVITY = {
     f"{reward}_g{gamma}": dict(PROPOSED, reward=reward, gamma=gamma)
     for reward in SENSITIVITY_REWARDS for gamma in SENSITIVITY_GAMMAS
 }
-GRIDS = {"main": CONDITIONS, "sensitivity": SENSITIVITY}
+STATE = {
+    f"state_{state}": dict(PROPOSED, state=state)
+    for state in ("theta", "theta_step", "belief")
+}
+ABLATION = ablation_grid()
+GRIDS = {"main": CONDITIONS, "sensitivity": SENSITIVITY, "state": STATE,
+         "ablation": ABLATION}
 RULES = ("MFI", "FIWL", "MPWI", "MEPV")
 SHOW_STEPS = [5, 10, 20, 40]
 LIMITATION = (
@@ -212,7 +245,8 @@ def plot_mean(agg, out):
     fig = Figure(figsize=(9, 5.5), layout="constrained")
     FigureCanvasAgg(fig)
     ax = fig.subplots()
-    for condition in (*RULES, *CONDITIONS, *SENSITIVITY):
+    conditions = dict.fromkeys((*RULES, *CONDITIONS, *SENSITIVITY, *STATE, *ABLATION))
+    for condition in conditions:
         sub = agg[agg.condition == condition].sort_values("step")
         if len(sub):
             ax.plot(sub.step, sub.rmse_mean, label=condition, linewidth=1.8)
@@ -244,7 +278,7 @@ def aggregate(out):
         save_csv(agg, out / "mean.csv")
         plot_mean(agg, out)
     print(LIMITATION)
-    planned = 3 if out.name.startswith("sensitivity") else 10
+    planned = 3 if out.name.startswith(("sensitivity", "state", "ablation")) else 10
     print("All conditions are re-evaluated per rep because the test split is resampled "
           f"(split_seed = base + rep - 1). DQN target: {planned} replications.")
     steps = [s for s in SHOW_STEPS if s in set(agg.step)] or [int(agg.step.max())]

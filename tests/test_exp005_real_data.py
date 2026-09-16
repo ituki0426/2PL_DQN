@@ -215,6 +215,54 @@ class TrainingTests(unittest.TestCase):
 
 
 class CLITests(unittest.TestCase):
+    def test_ablation_grid_uses_bidirectional_five_factor_swaps(self):
+        with tempfile.TemporaryDirectory() as temporary, redirect_stdout(io.StringIO()):
+            root = Path(temporary)
+            fixture(root)
+            args = ["--dataset", DATASETS[0], "--data-root", str(root),
+                    "--out", str(root / "out"), "--grid", "ablation",
+                    "--test-length", "3", "--n-epochs", "1", "--threads", "1",
+                    "--conditions", "existing+constraint,proposed-learning", "--rep", "1"]
+            main(args)
+            out = root / "out" / "EXP005" / DATASETS[0] / "ablation"
+            frame = pd.read_csv(out / "rep1.csv")
+            self.assertEqual(set(frame.condition),
+                             {"MFI", "FIWL", "MPWI", "MEPV",
+                              "existing+constraint", "proposed-learning"})
+            metadata = json.loads((out / "metadata.json").read_text())
+            self.assertEqual(metadata["planned_dqn_replications"], 3)
+            self.assertEqual(set(metadata["configs"]),
+                             {"existing", "proposed",
+                              *(f"existing+{factor}" for factor in
+                                ("constraint", "state", "reward", "gamma", "learning")),
+                              *(f"proposed-{factor}" for factor in
+                                ("constraint", "state", "reward", "gamma", "learning"))})
+            configs = metadata["configs"]
+            self.assertEqual(configs["existing+constraint"]["positive"], "none")
+            self.assertEqual(configs["proposed-learning"]["hidden"], 50)
+            self.assertEqual(configs["proposed-learning"]["buffer_size"], 1_000)
+            self.assertEqual(configs["proposed-learning"]["eps_start"], 0.1)
+
+    def test_state_grid_uses_three_proposed_state_variants(self):
+        with tempfile.TemporaryDirectory() as temporary, redirect_stdout(io.StringIO()):
+            root = Path(temporary)
+            fixture(root)
+            args = ["--dataset", DATASETS[0], "--data-root", str(root),
+                    "--out", str(root / "out"), "--grid", "state",
+                    "--test-length", "3", "--n-epochs", "1", "--threads", "1",
+                    "--rep", "1"]
+            main(args)
+            out = root / "out" / "EXP005" / DATASETS[0] / "state"
+            frame = pd.read_csv(out / "rep1.csv")
+            self.assertEqual(set(frame.condition),
+                             {"MFI", "FIWL", "MPWI", "MEPV",
+                              "state_theta", "state_theta_step", "state_belief"})
+            metadata = json.loads((out / "metadata.json").read_text())
+            self.assertEqual(metadata["planned_dqn_replications"], 3)
+            self.assertEqual({name: config["state"] for name, config in metadata["configs"].items()},
+                             {"state_theta": "theta", "state_theta_step": "theta_step",
+                              "state_belief": "belief"})
+
     def test_sensitivity_grid_uses_all_seven_rewards_and_separate_output(self):
         with tempfile.TemporaryDirectory() as temporary, redirect_stdout(io.StringIO()):
             root = Path(temporary)
