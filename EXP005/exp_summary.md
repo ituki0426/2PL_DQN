@@ -21,6 +21,14 @@ uv run python run_grid.py --experiment EXP005 \
   --dataset choi_2026_cmsce_2019_2 \
   --responses irw_datasets/choi_2026_cmsce_2019_2_wide.csv --rep 1
 
+# 感度分析（7報酬 × gamma 4水準、3反復）
+for rep in 1 2 3; do
+  uv run python run_grid.py --experiment EXP005 \
+    --dataset choi_2026_cmsce_2019_2 --grid sensitivity --rep "$rep"
+done
+uv run python run_grid.py --experiment EXP005 \
+  --dataset choi_2026_cmsce_2019_2 --grid sensitivity --aggregate
+
 # データセットごとにDQNを10反復
 for dataset in choi_2026_cmsce_2019_2 choi_2026_cmsce_2020_1 choi_2026_cmsce_2021_2; do
   for rep in 1 2 3 4 5 6 7 8 9 10; do
@@ -37,8 +45,13 @@ uv run python run_grid.py --experiment EXP005 --dataset choi_2026_cmsce_2019_2 \
   --aggregate --quick --out /tmp/exp005-smoke
 ```
 
-`--grid` は省略可能で、初回実装は `main` のみ。`--conditions existing` または
+`--grid` は省略時に `main` となる。`main` では `--conditions existing` または
 `--conditions proposed` でDQN条件を限定でき、既存の同じ反復のCSVへ併合する。
+`sensitivity` は `prec_gain`、`var_reduction`、`fi_ref`、`fi_hat_prev`、
+`fi_hat_post`、`err_reduction_ref`、`neg_sq_err_ref` と割引率0、0.5、0.9、1.0の
+全28条件を提案手法の状態・学習設定で比較し、反復1〜3を使う。
+`fi_ref`、`err_reduction_ref`、`neg_sq_err_ref` の参照能力には、全項目EAPではなく、
+各CATエピソードの全40反応から得た最終MLEを使用してエピソード終了後に報酬を計算する。
 `--rep` は1〜10。`--n-epochs` の既定値は両条件とも5、`--test-length` は40。
 検証の既定頻度はエポック終了時のみ（`--eval-every 0`）。
 検証は必ずエポック終了時に実行し、`--eval-every N` を指定すると累積学習受験者数が
@@ -94,8 +107,8 @@ EXP005では両条件を `n_env=32` とし、同数の実受験者エピソー�
 
 ## 出力
 
-通常は `result/EXP005/<dataset>/main/`、`--out ROOT` なら
-`ROOT/EXP005/<dataset>/main/` に保存する。
+通常は `result/EXP005/<dataset>/<grid>/`、`--out ROOT` なら
+`ROOT/EXP005/<dataset>/<grid>/` に保存する。
 
 | ファイル | 内容 |
 |---|---|

@@ -177,20 +177,32 @@ class TrainingTests(unittest.TestCase):
         other.train(self.responses, self.responses[:2], log=lambda _: None)
         for a, b in zip(agents[0].epoch_orders, other.epoch_orders):
             np.testing.assert_array_equal(a, b)
+        deferred_agents = []
+        for reference in (np.array([-1., 1.]), np.array([100., -100.])):
+            agent = DQNAgent(self.bank, 3, self.cfg(reward="fi_ref", train_seed=27))
+            agent.train(self.responses, self.responses[:2], reference, log=lambda _: None)
+            deferred_agents.append(agent)
+            self.assertEqual(agent.transitions, 30)
+        for name, value in deferred_agents[0].q.state_dict().items():
+            torch.testing.assert_close(value, deferred_agents[1].q.state_dict()[name], rtol=0, atol=0)
+        self.assertEqual(deferred_agents[0].best_episodes, deferred_agents[1].best_episodes)
         for reward in ("fi_ref", "err_reduction_ref", "neg_sq_err_ref"):
-            with self.assertRaises(ValueError):
-                DQNAgent(self.bank, 3, self.cfg(reward=reward))
+            self.assertTrue(DQNAgent(self.bank, 3, self.cfg(reward=reward)).deferred)
 
     def test_episode_return_matches_actual_rewards(self):
-        for reward in ("prec_gain", "fi_hat_prev", "var_reduction", "fi_hat_post"):
+        rewards = ("prec_gain", "var_reduction", "fi_ref", "fi_hat_prev", "fi_hat_post",
+                   "err_reduction_ref", "neg_sq_err_ref")
+        for reward in rewards:
             agent = DQNAgent(self.bank, 3, self.cfg(reward=reward))
             hist, items, resp, initial = run_cat(agent, self.bank, self.responses, 3)
             total = np.zeros(5)
+            reference = hist[-1]
             for t in range(3):
                 before = initial if t == 0 else hist[t - 1]
                 lv0 = np.log(posterior(self.bank, items[:, :t], resp[:, :t])[1])
                 lv1 = np.log(posterior(self.bank, items[:, :t + 1], resp[:, :t + 1])[1])
-                total += agent._reward(items[:, t], before, hist[t], lv0, lv1)
+                total += agent._reward(items[:, t], before, hist[t], lv0, lv1,
+                                       th_ref=reference)
             self.assertAlmostEqual(agent.episode_return(items, resp, hist, initial), total.mean())
 
     def test_metrics(self):
@@ -203,6 +215,30 @@ class TrainingTests(unittest.TestCase):
 
 
 class CLITests(unittest.TestCase):
+    def test_sensitivity_grid_uses_all_seven_rewards_and_separate_output(self):
+        with tempfile.TemporaryDirectory() as temporary, redirect_stdout(io.StringIO()):
+            root = Path(temporary)
+            fixture(root)
+            args = ["--dataset", DATASETS[0], "--data-root", str(root),
+                    "--out", str(root / "out"), "--grid", "sensitivity",
+                    "--test-length", "3", "--n-epochs", "1", "--threads", "1",
+                    "--conditions", "prec_gain_g0.0,fi_hat_prev_g0.5,fi_ref_g0.9",
+                    "--rep", "1"]
+            main(args)
+            out = root / "out" / "EXP005" / DATASETS[0] / "sensitivity"
+            frame = pd.read_csv(out / "rep1.csv")
+            self.assertEqual(set(frame.condition),
+                             {"MFI", "FIWL", "MPWI", "MEPV",
+                              "prec_gain_g0.0", "fi_hat_prev_g0.5", "fi_ref_g0.9"})
+            metadata = json.loads((out / "metadata.json").read_text())
+            self.assertEqual(metadata["planned_dqn_replications"], 3)
+            self.assertEqual(set(metadata["configs"]),
+                             {f"{reward}_g{gamma}"
+                              for reward in ("prec_gain", "var_reduction", "fi_ref",
+                                             "fi_hat_prev", "fi_hat_post",
+                                             "err_reduction_ref", "neg_sq_err_ref")
+                              for gamma in (0.0, 0.5, 0.9, 1.0)})
+
     def test_rep_10_upgrades_planned_replication_metadata(self):
         with tempfile.TemporaryDirectory() as temporary, redirect_stdout(io.StringIO()):
             root = Path(temporary)

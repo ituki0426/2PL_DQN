@@ -33,7 +33,9 @@ class DQNConfig:
 
 
 STATE_DIM = {"theta": 1, "theta_step": 2, "belief": 3}
-REWARDS = ("prec_gain", "var_reduction", "fi_hat_prev", "fi_hat_post")
+REWARDS = ("prec_gain", "var_reduction", "fi_ref", "fi_hat_prev", "fi_hat_post",
+           "err_reduction_ref", "neg_sq_err_ref")
+DEFERRED = ("fi_ref", "err_reduction_ref", "neg_sq_err_ref")
 
 
 class QNet(nn.Module):
@@ -49,7 +51,7 @@ class DQNAgent:
     def __init__(self, bank, test_length, cfg: DQNConfig):
         self.bank, self.L, self.cfg = np.asarray(bank, dtype=float), test_length, cfg
         if cfg.reward not in REWARDS:
-            raise ValueError("Reference-ability rewards are excluded from EXP005's main experiment")
+            raise ValueError(f"unknown reward: {cfg.reward}")
         if cfg.state not in STATE_DIM or cfg.positive not in ("none", "all"):
             raise ValueError("unknown state or constraint")
         for name in ("hidden", "batch_size", "buffer_size", "target_every", "n_env",
@@ -68,6 +70,7 @@ class DQNAgent:
             raise ValueError("bank requires positive discrimination and enough items")
         self.n_items = self.bank.shape[0]
         self.n_in = STATE_DIM[cfg.state]
+        self.deferred = cfg.reward in DEFERRED
         h2 = cfg.hidden2 or cfg.hidden
         torch.manual_seed(cfg.train_seed)
         self.q = QNet(self.n_in, cfg.hidden, h2, self.n_items)
@@ -101,7 +104,7 @@ class DQNAgent:
                 for p in self.q.parameters():
                     p.clamp_(min=0.0)
 
-    def _reward(self, a, th_prev, th_post, log_var_prev, log_var_post):
+    def _reward(self, a, th_prev, th_post, log_var_prev, log_var_post, th_ref=None):
         a_i, b_i = self.bank[a, 0], self.bank[a, 1]
         kind = self.cfg.reward
         if kind == "prec_gain":
@@ -112,6 +115,14 @@ class DQNAgent:
             return info(a_i, b_i, th_prev)
         if kind == "fi_hat_post":
             return info(a_i, b_i, th_post)
+        if th_ref is None:
+            raise ValueError(f"{kind} requires the end-of-episode MLE")
+        if kind == "fi_ref":
+            return info(a_i, b_i, th_ref)
+        if kind == "err_reduction_ref":
+            return (th_prev - th_ref) ** 2 - (th_post - th_ref) ** 2
+        if kind == "neg_sq_err_ref":
+            return -((th_post - th_ref) ** 2)
         raise ValueError(f"unknown reward: {kind}")
 
     # ---- training --------------------------------------------------------
@@ -162,6 +173,7 @@ class DQNAgent:
                 mask = np.zeros((size, n_items), bool)
                 items = np.zeros((size, L), np.int64)
                 resp = np.zeros((size, L), np.int64)
+                episode = []
                 for t in range(L):
                     s = self.features(theta_hat, t, log_var)
                     a = self.greedy_from_features(s, mask)
@@ -176,13 +188,22 @@ class DQNAgent:
                     log_var = np.log(posterior(self.bank, items[:, :t + 1], resp[:, :t + 1])[1])
                     s2 = self.features(theta_hat, t + 1, log_var)
                     done = float(t == L - 1)
-                    reward = self._reward(a, th_prev, theta_hat, log_var_prev, log_var)
-                    idx = (ptr + rows) % B
-                    buf_s[idx], buf_a[idx], buf_r[idx], buf_s2[idx] = s, a, reward, s2
-                    buf_done[idx], buf_mask2[idx] = done, mask
-                    ptr = (ptr + size) % B
-                    n_stored = min(n_stored + size, B)
-                    self.transitions += size
+                    episode.append((s, a.copy(), th_prev, theta_hat, log_var_prev,
+                                    log_var, s2, done, mask.copy()))
+                    if not self.deferred:
+                        pending = (episode[-1],)
+                    elif done:
+                        pending = episode
+                    else:
+                        pending = ()
+                    for s_, a_, thp, thq, lvp, lvq, s2_, d_, mask_ in pending:
+                        reward = self._reward(a_, thp, thq, lvp, lvq, th_ref=theta_hat)
+                        idx = (ptr + rows) % B
+                        buf_s[idx], buf_a[idx], buf_r[idx], buf_s2[idx] = s_, a_, reward, s2_
+                        buf_done[idx], buf_mask2[idx] = d_, mask_
+                        ptr = (ptr + size) % B
+                        n_stored = min(n_stored + size, B)
+                        self.transitions += size
                     if n_stored >= cfg.batch_size:
                         self._update(rng, n_stored, buf_s, buf_a, buf_r, buf_s2, buf_done, buf_mask2)
                         grad_steps += 1
@@ -227,6 +248,13 @@ class DQNAgent:
             return float(info(a, b, prev).sum(axis=0).mean())
         if kind == "fi_hat_post":
             return float(info(a, b, hist).sum(axis=0).mean())
+        ref = hist[-1]  # final MLE from the complete L-response CAT episode
+        if kind == "fi_ref":
+            return float(info(a, b, ref[None, :]).sum(axis=0).mean())
+        if kind == "err_reduction_ref":
+            return float(np.mean((theta0 - ref) ** 2))
+        if kind == "neg_sq_err_ref":
+            return float(-np.mean(((hist - ref[None, :]) ** 2).sum(axis=0)))
         raise ValueError(kind)
 
     def _update(self, rng, n_stored, buf_s, buf_a, buf_r, buf_s2, buf_done, buf_mask2):

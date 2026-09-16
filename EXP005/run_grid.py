@@ -1,4 +1,4 @@
-"""Run the six main real-response conditions, one DQN replication per process."""
+"""Run main or reward-by-discount sensitivity conditions on real responses."""
 import argparse
 from contextlib import contextmanager
 from dataclasses import asdict
@@ -25,6 +25,14 @@ PROPOSED = dict(state="belief", reward="prec_gain", positive="none",
     hidden=64, hidden2=0, gamma=0.5, buffer_size=50_000, n_env=32,
     target_every=500, eps_start=1.0, eps_end=0.05)
 CONDITIONS = {"existing": EXISTING, "proposed": PROPOSED}
+SENSITIVITY_REWARDS = ("prec_gain", "var_reduction", "fi_ref", "fi_hat_prev",
+                       "fi_hat_post", "err_reduction_ref", "neg_sq_err_ref")
+SENSITIVITY_GAMMAS = (0.0, 0.5, 0.9, 1.0)
+SENSITIVITY = {
+    f"{reward}_g{gamma}": dict(PROPOSED, reward=reward, gamma=gamma)
+    for reward in SENSITIVITY_REWARDS for gamma in SENSITIVITY_GAMMAS
+}
+GRIDS = {"main": CONDITIONS, "sensitivity": SENSITIVITY}
 RULES = ("MFI", "FIWL", "MPWI", "MEPV")
 SHOW_STEPS = [5, 10, 20, 40]
 LIMITATION = (
@@ -61,11 +69,11 @@ def output_directory(args):
     out = result_directory(__package__, args.out) / args.dataset
     if args.screening == "strict":
         out /= "strict"
-    return out / ("main_quick" if args.quick else "main")
+    return out / (f"{args.grid}_quick" if args.quick else args.grid)
 
 
 def config_for(args, condition):
-    return DQNConfig(**CONDITIONS[condition], n_epochs=1 if args.quick else args.n_epochs,
+    return DQNConfig(**GRIDS[args.grid][condition], n_epochs=1 if args.quick else args.n_epochs,
         eval_every=args.eval_every, eval_batch_size=args.eval_batch_size,
         train_seed=args.train_seed + args.rep - 1, shuffle_seed=args.shuffle_seed)
 
@@ -103,7 +111,7 @@ def prepare(args, out):
         indices = {s: idx[:128 if s == "train" else 64] for s, idx in indices.items()}
     splits["used_in_run"] = False
     splits.loc[np.concatenate(list(indices.values())), "used_in_run"] = True
-    configs = {c: asdict(config_for(args, c)) for c in CONDITIONS}
+    configs = {c: asdict(config_for(args, c)) for c in GRIDS[args.grid]}
     for config in configs.values():
         config["train_seed"] = args.train_seed  # record the base, independent of --rep
     metadata = dict(schema_version=2, dataset=data.name, source_sha256=data.source_hashes,
@@ -112,7 +120,7 @@ def prepare(args, out):
         configs=configs, quick=args.quick, n_items=len(data.bank), n_respondents=len(data.responses),
         excluded_item_ids=data.excluded_item_ids, reference="theta_reference = full-response theta_EAP",
         model_selection="maximum mean validation episode return; RMSE is diagnostic only",
-        planned_dqn_replications=10, limitation=LIMITATION)
+        planned_dqn_replications=10 if args.grid == "main" else 3, limitation=LIMITATION)
     manifest = out / "metadata.json"
     with result_lock(out / ".metadata.lock"):
         _drop_v1_layout(out)
@@ -120,7 +128,7 @@ def prepare(args, out):
             existing_metadata = json.loads(manifest.read_text())
             # Expanding the planned replication count does not invalidate completed reps.
             # Upgrade only this bookkeeping field; continue to reject real setting changes.
-            if existing_metadata.get("planned_dqn_replications") == 5:
+            if args.grid == "main" and existing_metadata.get("planned_dqn_replications") == 5:
                 upgraded = dict(existing_metadata)
                 upgraded["planned_dqn_replications"] = 10
                 existing_metadata = upgraded
@@ -149,7 +157,7 @@ def run_rep(args, out):
     test_responses = data.responses[indices["test"]]
     reference = data.theta_reference[indices["test"]]
     seed = rep_split_seed(args)
-    conditions = args.conditions.split(",") if args.conditions else list(CONDITIONS)
+    conditions = args.conditions.split(",") if args.conditions else list(GRIDS[args.grid])
     path = out / f"rep{args.rep}.csv"
     with result_lock(out / f".rep{args.rep}.lock"):
         analytic_rows = []
@@ -204,7 +212,7 @@ def plot_mean(agg, out):
     fig = Figure(figsize=(9, 5.5), layout="constrained")
     FigureCanvasAgg(fig)
     ax = fig.subplots()
-    for condition in (*RULES, *CONDITIONS):
+    for condition in (*RULES, *CONDITIONS, *SENSITIVITY):
         sub = agg[agg.condition == condition].sort_values("step")
         if len(sub):
             ax.plot(sub.step, sub.rmse_mean, label=condition, linewidth=1.8)
@@ -236,8 +244,9 @@ def aggregate(out):
         save_csv(agg, out / "mean.csv")
         plot_mean(agg, out)
     print(LIMITATION)
+    planned = 3 if out.name.startswith("sensitivity") else 10
     print("All conditions are re-evaluated per rep because the test split is resampled "
-          "(split_seed = base + rep - 1). DQN target: 10 replications.")
+          f"(split_seed = base + rep - 1). DQN target: {planned} replications.")
     steps = [s for s in SHOW_STEPS if s in set(agg.step)] or [int(agg.step.max())]
     print(agg[agg.step.isin(steps)].to_string(index=False))
     return agg
@@ -246,7 +255,7 @@ def aggregate(out):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", required=True, choices=DATASETS)
-    parser.add_argument("--grid", default="main", choices=["main"])
+    parser.add_argument("--grid", default="main", choices=list(GRIDS))
     action = parser.add_mutually_exclusive_group(required=True)
     action.add_argument("--rep", type=int, choices=range(1, 11))
     action.add_argument("--aggregate", action="store_true")
@@ -262,10 +271,12 @@ def main(argv=None):
     parser.add_argument("--eval-every", type=int, default=0,
                         help="additional validation interval in respondents; 0 = epoch ends only")
     parser.add_argument("--eval-batch-size", type=int, default=256)
-    parser.add_argument("--conditions", help="existing,proposed or either condition")
-    parser.add_argument("--quick", action="store_true", help="128/64/64 people, one epoch; separate main_quick output")
+    parser.add_argument("--conditions", help="comma-separated subset of the selected grid")
+    parser.add_argument("--quick", action="store_true",
+                        help="128/64/64 people, one epoch; separate <grid>_quick output")
     parser.add_argument("--threads", type=int, default=4)
-    parser.add_argument("--out", type=Path, help="output root; saves under <root>/EXP005/<dataset>/main")
+    parser.add_argument("--out", type=Path,
+                        help="output root; saves under <root>/EXP005/<dataset>/<grid>")
     args = parser.parse_args(argv)
     if min(args.test_length, args.n_epochs, args.threads, args.eval_batch_size) < 1:
         parser.error("test length, epochs, threads and evaluation batch size must be positive")
@@ -273,8 +284,8 @@ def main(argv=None):
         parser.error("seeds and eval-every must be nonnegative")
     if args.conditions:
         names = args.conditions.split(",")
-        if len(set(names)) != len(names) or not set(names).issubset(CONDITIONS):
-            parser.error("--conditions must be existing,proposed or either condition")
+        if len(set(names)) != len(names) or not set(names).issubset(GRIDS[args.grid]):
+            parser.error("--conditions must be a comma-separated subset of the selected grid")
     torch.set_num_threads(args.threads)
     out = output_directory(args)
     out.mkdir(parents=True, exist_ok=True)
