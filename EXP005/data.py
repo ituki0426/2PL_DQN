@@ -10,6 +10,7 @@ import pandas as pd
 
 DATASETS = tuple(f"choi_2026_cmsce_{year}" for year in ("2019_2", "2020_1", "2021_2"))
 SPLIT_SEED = 20260904
+DIFFICULTY_TAIL_COUNT = 15
 
 
 @dataclass
@@ -80,6 +81,15 @@ def load_dataset(dataset, data_root, test_length=40, responses_path=None, screen
     keep = bank[:, 0] > 0
     if screening == "strict":
         keep &= (bank[:, 0] >= 0.2) & (np.abs(bank[:, 1]) <= 4)
+    eligible = np.flatnonzero(keep)
+    if len(eligible) <= 2 * DIFFICULTY_TAIL_COUNT:
+        raise ValueError(f"Only {len(eligible)} items after screening; need more than "
+                         f"{2 * DIFFICULTY_TAIL_COUNT} to exclude both difficulty tails")
+    # Break equal-b ties by the already sorted item ID, so exactly 15 items
+    # from each tail are excluded reproducibly.
+    ordered = eligible[np.argsort(bank[eligible, 1], kind="stable")]
+    keep[ordered[:DIFFICULTY_TAIL_COUNT]] = False
+    keep[ordered[-DIFFICULTY_TAIL_COUNT:]] = False
     if keep.sum() < test_length:
         raise ValueError(f"Only {keep.sum()} usable items for test_length={test_length}")
     hashes = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in

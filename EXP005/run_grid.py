@@ -12,7 +12,7 @@ import pandas as pd
 import torch
 
 from experiment_runner import PROJECT_ROOT, result_directory
-from .data import DATASETS, SPLIT_SEED, load_dataset, split_respondents
+from .data import DATASETS, DIFFICULTY_TAIL_COUNT, SPLIT_SEED, load_dataset, split_respondents
 from .dqn import DQNAgent, DQNConfig
 from .rules import MEPVPolicy, MFIPolicy, WeightedInfoPolicy
 from .simulate import metrics_by_step, run_cat
@@ -148,7 +148,8 @@ def prepare(args, out):
     for config in configs.values():
         config["train_seed"] = args.train_seed  # record the base, independent of --rep
     metadata = dict(schema_version=2, dataset=data.name, source_sha256=data.source_hashes,
-        screening=args.screening, test_length=args.test_length, split_seed=args.split_seed,
+        screening=args.screening, difficulty_tail_count=DIFFICULTY_TAIL_COUNT,
+        test_length=args.test_length, split_seed=args.split_seed,
         split_seed_scheme="split_seed + rep - 1",
         configs=configs, quick=args.quick, n_items=len(data.bank), n_respondents=len(data.responses),
         excluded_item_ids=data.excluded_item_ids, reference="theta_reference = full-response theta_EAP",

@@ -23,14 +23,19 @@ from EXP005.simulate import metrics_by_step, run_cat
 def fixture(root):
     directory = root / DATASETS[0]
     directory.mkdir()
-    pd.DataFrame({"item": ["03", "01", "02", "04"], "a": [1.3, 0.7, -0.5, 1.1],
-                  "b": [1., -1., 0., 0.]}).to_csv(directory / "item_parameters.csv", index=False)
+    low_ids = [f"L{i:02}" for i in range(15)]
+    high_ids = [f"H{i:02}" for i in range(15)]
+    pd.DataFrame({"item": ["03", "01", "02", "04", *low_ids, *high_ids],
+                  "a": [1.3, 0.7, -0.5, 1.1] + [1.] * 30,
+                  "b": [1., -1., 0., 0.] + list(range(-30, -15)) + list(range(16, 31))}
+                 ).to_csv(directory / "item_parameters.csv", index=False)
     ids = [f"{i:04}" for i in range(100)]
     pd.DataFrame({"id": ids[::-1], "theta_EAP": np.linspace(-2, 2, 100)[::-1]}).to_csv(
         directory / "person_scores.csv", index=False)
     rng = np.random.default_rng(12)
-    values = rng.integers(0, 2, size=(100, 4))
-    frame = pd.DataFrame(values, columns=["04", "02", "01", "03"])
+    frame = pd.DataFrame(rng.integers(0, 2, size=(100, 4)), columns=["04", "02", "01", "03"])
+    for item, column in zip([*low_ids, *high_ids], rng.integers(0, 2, size=(100, 30)).T):
+        frame[item] = column
     frame.insert(0, "id", ids)
     frame.to_csv(directory / "responses.csv", index=False)
     return directory, frame
@@ -50,11 +55,32 @@ class DataTests(unittest.TestCase):
         data = self.load()
         self.assertEqual(data.respondent_ids[0], "0000")
         self.assertEqual(data.item_ids.tolist(), ["01", "03", "04"])
-        self.assertEqual(data.excluded_item_ids, ["02"])
+        self.assertEqual(data.excluded_item_ids, ["02", *[f"H{i:02}" for i in range(15)],
+                                                  *[f"L{i:02}" for i in range(15)]])
         np.testing.assert_array_equal(data.responses, self.responses[["01", "03", "04"]].to_numpy())
         np.testing.assert_allclose(data.theta_reference, np.linspace(-2, 2, 100))
         with self.assertRaisesRegex(ValueError, "usable items"):
             load_dataset(DATASETS[0], self.root, test_length=4)
+
+    def test_equal_difficulties_use_item_id_order_for_exact_tail_counts(self):
+        path = self.directory / "item_parameters.csv"
+        items = pd.read_csv(path, dtype={"item": str})
+        items.loc[items.item == "L14", "b"] = -1
+        items.loc[items.item == "H00", "b"] = 1
+        items.to_csv(path, index=False)
+        data = self.load()
+        self.assertEqual(data.item_ids.tolist(), ["03", "04", "L14"])
+        self.assertEqual(len(data.excluded_item_ids), 31)  # 30 difficulty tails plus a <= 0
+        np.testing.assert_array_equal(data.responses,
+                                      self.responses[["03", "04", "L14"]].to_numpy())
+
+    def test_too_few_items_for_both_tails_is_rejected(self):
+        path = self.directory / "item_parameters.csv"
+        items = pd.read_csv(path, dtype={"item": str})
+        items.loc[items.item.isin(["03", "04", "L14"]), "a"] = 0
+        items.to_csv(path, index=False)
+        with self.assertRaisesRegex(ValueError, "need more than 30"):
+            self.load()
 
     def test_duplicate_or_mismatched_ids_and_invalid_responses(self):
         path = self.directory / "responses.csv"
@@ -335,6 +361,7 @@ class CLITests(unittest.TestCase):
             self.assertTrue((out / "mean.png").is_file())
             metadata = json.loads((out / "metadata.json").read_text())
             self.assertEqual(metadata["schema_version"], 2)
+            self.assertEqual(metadata["difficulty_tail_count"], 15)
             self.assertEqual(metadata["split_seed_scheme"], "split_seed + rep - 1")
             self.assertEqual(metadata["split_seed"], 20260904)
             dqn = rep1[rep1.condition.isin({"existing", "proposed"})]
